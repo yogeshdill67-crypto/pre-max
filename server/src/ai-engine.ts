@@ -397,40 +397,60 @@ export const generatePresentation = async (
 };
 
 // ─── AI Helper (Llama-2 via Bytez) ───────────────────
-const callAI = async (prompt: string): Promise<string> => {
+const repairJSON = (str: string): string => {
     try {
-        const raw = await callChatModelWithBytez([{ role: "user", content: prompt }]);
-
-        // Find JSON block
-        const firstBracket = raw.indexOf('{');
-        const lastBracket = raw.lastIndexOf('}');
-
-        if (firstBracket === -1 || lastBracket <= firstBracket) {
-            console.error("AI returned non-JSON response:", raw);
-            throw new Error("AI failed to provide a valid JSON object. Please try again.");
+        JSON.parse(str);
+        return str;
+    } catch (e) {
+        let repaired = str.trim();
+        if ((repaired.match(/"/g) || []).length % 2 !== 0) repaired += '"';
+        const stack: string[] = [];
+        for (let char of repaired) {
+            if (char === '{') stack.push('}');
+            if (char === '[') stack.push(']');
+            if (char === '}') stack.pop();
+            if (char === ']') stack.pop();
         }
-
-        const clean = raw.substring(firstBracket, lastBracket + 1);
-
-        // Double check it's actually parsable before returning
-        try {
-            JSON.parse(clean);
-            return clean;
-        } catch (e) {
-            console.error("AI response was found but is invalid JSON. Fragment:", clean.substring(0, 100));
-            throw new Error("AI provided malformed information. Retrying usually helps.");
-        }
-    } catch (e: any) {
-        console.error(`Cortex AI failure:`, e.message);
-        throw e;
+        while (stack.length > 0) repaired += stack.pop();
+        return repaired;
     }
+};
+
+const callAI = async (prompt: string, retries = 2): Promise<string> => {
+    let lastError: any;
+    for (let i = 0; i < retries; i++) {
+        try {
+            const raw = await callChatModelWithBytez([{ role: "user", content: prompt }]);
+            const firstBracket = raw.indexOf('{');
+            if (firstBracket === -1) throw new Error("No JSON object found");
+
+            const lastBracket = raw.lastIndexOf('}');
+            let clean = lastBracket > firstBracket
+                ? raw.substring(firstBracket, lastBracket + 1)
+                : raw.substring(firstBracket);
+
+            const repaired = repairJSON(clean);
+            try {
+                JSON.parse(repaired);
+                return repaired;
+            } catch (e) {
+                console.warn(`JSON repair failed on attempt ${i + 1}.`);
+                lastError = e;
+                continue;
+            }
+        } catch (e: any) {
+            lastError = e;
+            console.error(`Attempt ${i + 1} failed:`, e.message);
+        }
+    }
+    throw new Error(`AI Search failed after ${retries} attempts: ${lastError.message}`);
 };
 
 // ─── AI Search ──────────────────────────────────────────────────
 export const aiSearch = async (query: string, mode: 'quick' | 'research' = 'quick') => {
     const depth = mode === 'research'
-        ? 'Provide an EXTREMELY thorough, in-depth research report with 6-8 detailed sections. Each section should have a clear heading and 2-3 paragraphs of content. Include data, statistics, and analysis.'
-        : 'Provide a concise but informative overview with 3-4 sections. Each section should have a heading and 1-2 paragraphs.';
+        ? 'Provide a thorough research report with 3-4 professional sections. Each section should have one high-quality paragraph. Be concise.'
+        : 'Provide a short overview with 2 bulleted sections.';
 
     const prompt = `
     TASK: Research the topic and provide a structured JSON response.

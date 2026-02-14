@@ -89,17 +89,26 @@ export const callChatModelWithBytez = async (messages: any[]): Promise<string> =
     try {
         console.log(`Bytez: Calling chat model with ${messages.length} messages...`);
         const sdk = new Bytez(BYTEZ_API_KEY);
-        const model = sdk.model("meta-llama/Llama-2-7b-chat-hf");
+        // Using Llama-3-8B-Instruct for much better JSON following and reliability
+        const model = sdk.model("meta-llama/Meta-Llama-3-8B-Instruct");
 
-        // Many Bytez chat models expect the first message if it's a simple run, or the whole array if it's chat-tuned.
-        // We'll pass the array but also prepare a fallback if it returns no output.
-        const response = await model.run(messages);
+        // Set parameters to ensure we get enough output and avoid truncation
+        const response = await model.run(messages, {
+            max_new_tokens: 2048,
+            temperature: 0.1
+        });
 
         if (response.error) {
-            throw new Error(`Bytez AI Error: ${response.error}`);
+            console.warn('Primary model error, falling back to Llama-2:', response.error);
+            const fallbackModel = sdk.model("meta-llama/Llama-2-7b-chat-hf");
+            const fallbackRes = await fallbackModel.run(messages);
+            if (fallbackRes.error) throw new Error(`Bytez AI Error: ${fallbackRes.error}`);
+            var finalResponse = fallbackRes;
+        } else {
+            var finalResponse = response;
         }
 
-        const output = response.output;
+        const output = finalResponse.output;
         if (output) {
             if (typeof output === 'string') return output;
             if (Array.isArray(output) && output[0]?.content) return output[0].content;
