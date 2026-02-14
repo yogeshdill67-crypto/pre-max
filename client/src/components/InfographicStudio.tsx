@@ -108,10 +108,10 @@ export const InfographicStudio: React.FC<StudioProps> = ({ onBack }) => {
                         id: Date.now().toString(),
                         type: 'image',
                         content: data.image,
-                        x: 150,
-                        y: 150,
-                        width: 300,
-                        height: 300,
+                        x: 0, // Full width starts at 0
+                        y: 0, // Top
+                        width: 450, // Match the new 9:16 canvas width
+                        height: 800, // Match the new 9:16 canvas height for full coverage
                         zIndex: elements.length + 1,
                     };
                     setElements(prev => [...prev, newEl]);
