@@ -321,8 +321,8 @@ export const InfographicStudio: React.FC<StudioProps> = ({ onBack }) => {
                             onClick={handleGenerateImage}
                             disabled={isGenerating || !prompt}
                             className={`w-full py-3 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${isGenerating
-                                    ? 'bg-neutral-800 text-neutral-500'
-                                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-[0.98]'
+                                ? 'bg-neutral-800 text-neutral-500'
+                                : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-[0.98]'
                                 }`}
                         >
                             {isGenerating ? (
@@ -363,9 +363,9 @@ export const InfographicStudio: React.FC<StudioProps> = ({ onBack }) => {
                     ref={canvasRef}
                     className="relative bg-white shadow-2xl transition-all duration-300"
                     style={{
-                        width: '595px', // A4 width approx (at 72dpi? No, simplified pixel units for now)
-                        height: '842px', // A4 height approx
-                        transform: 'scale(1)', // Could implement zoom
+                        width: '450px', // 9:16 aspect ratio (adapted for viewport)
+                        height: '800px',
+                        transform: 'scale(1)',
                     }}
                     onMouseDown={() => setSelectedId(null)} // Click bg to deselect
                 >
