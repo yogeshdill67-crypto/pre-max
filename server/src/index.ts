@@ -267,18 +267,29 @@ app.post('/api/extract-keypoints', async (req, res) => {
 // ─── Clipdrop Endpoints ─────────────────────────────────────────
 
 // Generate Image using OpenRouter (Gemini 2.0 Flash - SVG Fallback)
-// Generate Image using Bytez (Stable Diffusion XL) instead of Gemini SVG
+// Generate Image using Bytez (Imagen 4.0)
 app.post('/api/clipdrop/generate', async (req, res) => {
     try {
-        const { prompt } = req.body;
+        const { prompt, boost = true } = req.body;
         if (!prompt) {
             return res.status(400).json({ error: 'Prompt is required' });
         }
 
-        console.log('Generating image with Bytez (SDXL):', prompt);
+        let finalPrompt = prompt;
+        if (boost) {
+            finalPrompt = `
+                Professional high-end visual: "${prompt}".
+                Style: Clean modern design, flat vector illustration elements, semi-realistic details, textbook-style clarity.
+                Composition: Symmetrical balance, centered focal point, professional lighting.
+                Quality: 4K resolution, sharp edges, high contrast, vibrant yet professional colors.
+                Lighting: Soft glow effects, subtle shadows, cinematic lighting.
+                No blurry textures, no generic artifacts.
+            `.trim();
+        }
 
-        // Use the Bytez integration we just updated
-        const dataUri = await generateImageDataUrl(prompt);
+        console.log('Generating image with Bytez (Imagen 4.0):', finalPrompt.substring(0, 100) + '...');
+
+        const dataUri = await generateImageDataUrl(finalPrompt, boost);
 
         res.json({ success: true, image: dataUri });
     } catch (error: any) {

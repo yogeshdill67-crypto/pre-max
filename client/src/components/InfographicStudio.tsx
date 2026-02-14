@@ -298,24 +298,44 @@ export const InfographicStudio: React.FC<StudioProps> = ({ onBack }) => {
                 <div className="space-y-3">
                     <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">AI Tools</h3>
 
-                    <div className="p-3 rounded-xl bg-neutral-800/30 border border-neutral-800">
-                        <div className="flex items-center gap-2 mb-2 text-purple-400">
-                            <Sparkles size={16} />
-                            <span className="text-sm font-medium">Text to Image</span>
+                    {/* Text to Image Tool */}
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-neutral-800/40 to-neutral-900/40 border border-white/5 shadow-inner backdrop-blur-md">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2 text-purple-400">
+                                <Sparkles size={16} />
+                                <span className="text-sm font-bold tracking-tight uppercase">AI Vision Studio</span>
+                            </div>
+                            <div className="px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30">
+                                <span className="text-[10px] text-purple-300 font-bold uppercase tracking-widest">HD Mode</span>
+                            </div>
                         </div>
-                        <input
-                            type="text"
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="A futuristic city..."
-                            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-2 py-1 text-sm mb-2 focus:outline-none focus:border-purple-500"
-                        />
+                        <div className="relative mb-3">
+                            <textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                placeholder="Describe your vision (e.g., A cybernetic heart with glowing arteries)..."
+                                className="w-full bg-black/40 border border-neutral-700/50 rounded-xl px-3 py-2.5 text-sm resize-none h-24 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20 transition-all placeholder:text-neutral-600"
+                            />
+                        </div>
                         <button
                             onClick={handleGenerateImage}
                             disabled={isGenerating || !prompt}
-                            className="w-full py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-medium transition-colors"
+                            className={`w-full py-3 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${isGenerating
+                                    ? 'bg-neutral-800 text-neutral-500'
+                                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-[0.98]'
+                                }`}
                         >
-                            {isGenerating ? 'Generating...' : 'Generate'}
+                            {isGenerating ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-neutral-500 border-t-white rounded-full animate-spin" />
+                                    <span>Rendering Vision...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles size={16} />
+                                    <span>Generate in HD</span>
+                                </>
+                            )}
                         </button>
                     </div>
 
