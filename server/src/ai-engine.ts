@@ -421,6 +421,29 @@ const repairJSON = (str: string): string => {
         // Final attempt at fixing trailing commas after potential string close
         repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
 
+        // Handle common truncation patterns: {"a": 1, "
+        if (repaired.endsWith(', "') || repaired.endsWith(',"')) {
+            repaired = repaired.substring(0, repaired.lastIndexOf(','));
+        }
+
+        // Handle mid-key truncation: {"a": 1, "head
+        const lastQuote = repaired.lastIndexOf('"');
+        if (lastQuote !== -1 && !repaired.substring(lastQuote).includes(':')) {
+            // If we have a quote but no colon after it, it's likely a truncated key. Remove it.
+            const beforeKey = repaired.substring(0, lastQuote);
+            const commaBeforeKey = beforeKey.lastIndexOf(',');
+            if (commaBeforeKey !== -1) {
+                repaired = beforeKey.substring(0, commaBeforeKey);
+            } else {
+                // If no comma before, it might be the first key truncated, so just remove the partial key
+                repaired = beforeKey;
+            }
+        }
+
+        // Re-check quote count after potential truncations
+        const finalQuoteCount = (repaired.match(/"/g) || []).length;
+        if (finalQuoteCount % 2 !== 0) repaired += '"';
+
         // Close arrays and objects in reverse order of opening
         const stack: string[] = [];
         let inString = false;
@@ -470,7 +493,7 @@ const callAI = async (prompt: string, retries = 2): Promise<string> => {
             console.error(`Attempt ${i + 1} failed:`, e.message);
         }
     }
-    throw new Error(`AI Search failed after ${retries} attempts: ${lastError.message}`);
+    throw new Error(`AI generation failed after ${retries} attempts: ${lastError.message}`);
 };
 
 // ─── AI Search ──────────────────────────────────────────────────
@@ -487,7 +510,7 @@ export const aiSearch = async (query: string, mode: 'quick' | 'research' = 'quic
     CRITICAL: YOUR ENTIRE RESPONSE MUST BE A SINGLE VALID JSON OBJECT.
     DO NOT INCLUDE ANY INTRODUCTORY TEXT, CONVERSATION, OR MARKDOWN BACKTICKS.
     START WITH { AND END WITH }.
-    IMPORTANT: DO NOT USE TRAILING COMMAS. ENSURE EVERY SECTION IS CONCISE.
+    IMPORTANT: DO NOT USE TRAILING COMMAS. KEEP CONTENT DENSE AND CONCISE.
 
     OUTPUT FORMAT:
     {
@@ -595,9 +618,10 @@ export const generateInfographic = async (topic: string, style: string = 'corpor
     - OUTPUT ONLY VALID JSON. 
     - NO INTRODUCTORY TEXT. NO EXPLANATIONS.
     - Start with { and end with }.
-    - Generate 5-6 highly informative sections.
+    - Generate 3-4 highly informative sections.
+    - IMPORTANT: DO NOT USE TRAILING COMMAS.
     - Each section MUST have a distinct icon and heading.
-    - At least 3 sections should include compelling data stats.
+    - At least 2 sections should include compelling data stats.
     - Colors MUST be high-contrast for readability with soft glow effects indicated by the accent color.
     `;
 

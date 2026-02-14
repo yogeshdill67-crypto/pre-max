@@ -94,7 +94,7 @@ export const callChatModelWithBytez = async (messages: any[]): Promise<string> =
 
         // Set parameters to ensure we get enough output and avoid truncation
         const response = await model.run(messages, {
-            max_new_tokens: 2048,
+            max_new_tokens: 4096, // Increased for long-form research
             temperature: 0.1
         });
 
