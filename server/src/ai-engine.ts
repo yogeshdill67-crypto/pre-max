@@ -403,15 +403,42 @@ const repairJSON = (str: string): string => {
         return str;
     } catch (e) {
         let repaired = str.trim();
-        if ((repaired.match(/"/g) || []).length % 2 !== 0) repaired += '"';
-        const stack: string[] = [];
-        for (let char of repaired) {
-            if (char === '{') stack.push('}');
-            if (char === '[') stack.push(']');
-            if (char === '}') stack.pop();
-            if (char === ']') stack.pop();
+
+        // Remove common trailing artifacts
+        repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
+
+        // If cut off at a comma or colon
+        if (repaired.endsWith(',') || repaired.endsWith(':')) {
+            repaired = repaired.slice(0, -1);
         }
-        while (stack.length > 0) repaired += stack.pop();
+
+        // If it was cut off mid-string
+        const quoteCount = (repaired.match(/"/g) || []).length;
+        if (quoteCount % 2 !== 0) {
+            repaired += '"';
+        }
+
+        // Final attempt at fixing trailing commas after potential string close
+        repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
+
+        // Close arrays and objects in reverse order of opening
+        const stack: string[] = [];
+        let inString = false;
+        for (let i = 0; i < repaired.length; i++) {
+            const char = repaired[i];
+            if (char === '"' && repaired[i - 1] !== '\\') inString = !inString;
+            if (!inString) {
+                if (char === '{') stack.push('}');
+                if (char === '[') stack.push(']');
+                if (char === '}') stack.pop();
+                if (char === ']') stack.pop();
+            }
+        }
+
+        while (stack.length > 0) {
+            repaired += stack.pop();
+        }
+
         return repaired;
     }
 };
@@ -460,6 +487,7 @@ export const aiSearch = async (query: string, mode: 'quick' | 'research' = 'quic
     CRITICAL: YOUR ENTIRE RESPONSE MUST BE A SINGLE VALID JSON OBJECT.
     DO NOT INCLUDE ANY INTRODUCTORY TEXT, CONVERSATION, OR MARKDOWN BACKTICKS.
     START WITH { AND END WITH }.
+    IMPORTANT: DO NOT USE TRAILING COMMAS. ENSURE EVERY SECTION IS CONCISE.
 
     OUTPUT FORMAT:
     {
