@@ -1,0 +1,27 @@
+/* React Flow Styles */
+@import 'reactflow/dist/style.css';
+
+.react-flow__node {
+    @apply rounded-xl border border-neutral-700 bg-neutral-900 shadow-xl;
+    color: white;
+}
+
+.react-flow__handle {
+    @apply w-3 h-3 bg-blue-500 border-2 border-neutral-900;
+}
+
+.react-flow__background {
+    @apply bg-neutral-950;
+}
+
+.react-flow__controls {
+    @apply bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden;
+}
+
+.react-flow__controls-button {
+    @apply border-b border-neutral-800 bg-neutral-900 fill-neutral-400 hover:bg-neutral-800;
+}
+
+.react-flow__controls-button svg {
+    @apply fill-current;
+}
