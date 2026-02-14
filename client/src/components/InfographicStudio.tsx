@@ -387,7 +387,7 @@ export const InfographicStudio: React.FC<StudioProps> = ({ onBack }) => {
                                 <img
                                     src={el.content}
                                     alt=""
-                                    className="w-full h-full object-contain pointer-events-none shadow-md border border-neutral-100"
+                                    className="w-full h-full object-cover pointer-events-none shadow-md border border-neutral-100"
                                 />
                             )}
                             {el.type === 'text' && (

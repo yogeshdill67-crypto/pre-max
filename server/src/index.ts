@@ -278,12 +278,12 @@ app.post('/api/clipdrop/generate', async (req, res) => {
         let finalPrompt = prompt;
         if (boost) {
             finalPrompt = `
-                Professional high-end visual: "${prompt}".
-                Style: Clean modern design, flat vector illustration elements, semi-realistic details, textbook-style clarity.
-                Composition: Symmetrical balance, centered focal point, professional lighting.
-                Quality: 4K resolution, sharp edges, high contrast, vibrant yet professional colors.
-                Lighting: Soft glow effects, subtle shadows, cinematic lighting.
-                No blurry textures, no generic artifacts.
+                ULTRA-HD VERTICAL VISUAL: "${prompt}".
+                Composition: Full-screen portrait mode, edge-to-edge layout, vertical alignment, no borders.
+                Style: 9:16 aspect ratio cinematic composition, clean professional design, high-end technical clarity.
+                Quality: 8K resolution details, sharp professional edges, cinematic lighting, vibrant contrast.
+                Perspective: Full-body or full-scene vertical view, optimized for high-resolution mobile/poster screens.
+                No empty space at top/bottom, fill the entire frame perfectly.
             `.trim();
         }
 
