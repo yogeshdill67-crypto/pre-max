@@ -3,7 +3,6 @@ import { BaseEdge, EdgeProps, getBezierPath } from 'reactflow';
 import gsap from 'gsap';
 
 export const BeadsEdge: React.FC<EdgeProps> = ({
-    id,
     sourceX,
     sourceY,
     targetX,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Check, RefreshCw, Image as ImageIcon, Sparkles, Download, Globe, Search, ShoppingBag, Info } from 'lucide-react';
+import { ArrowLeft, Check, RefreshCw, Image as ImageIcon, Sparkles, Download, Search, ShoppingBag, Info } from 'lucide-react';
 import { PresentationResult } from '../types';
 
 interface ImageSelectorProps {

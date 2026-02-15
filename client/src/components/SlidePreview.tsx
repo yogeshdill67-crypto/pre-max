@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
-import { Download, Play, ArrowLeft, X, ChevronLeft, ChevronRight, Edit3, Check, Sparkles } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { RibbonToolbar } from './RibbonToolbar';
 import gsap from 'gsap';
 import { PresentationResult, SlideData, DiagramNode, DiagramConnection } from '../types';
 
@@ -644,60 +645,18 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({ result, onBack, onUp
     // ─── Grid View ───
     return (
         <div ref={containerRef} className="min-h-screen bg-neutral-950 text-white">
-            {/* Sticky header */}
-            <header className="border-b border-neutral-800/50 bg-neutral-900/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between sticky top-0 z-10 transition-all duration-300">
-                <div className="flex items-center gap-4">
-                    <button onClick={onBack} className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors group">
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    </button>
-                    <div>
-                        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">{editedResult.title}</h1>
-                        <p className="text-xs text-neutral-500 flex items-center gap-2">
-                            {editedResult.slides.length} slides • Theme:
-                            <span className="text-neutral-300 font-medium">{theme.name}</span>
-                            <span className="inline-flex gap-0.5 ml-1">
-                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: `#${theme.accent1}` }} />
-                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: `#${theme.accent2}` }} />
-                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: `#${theme.bg}`, border: '1px solid rgba(255,255,255,0.15)' }} />
-                            </span>
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    {/* Edit Controls */}
-                    {isEditing ? (
-                        <button
-                            onClick={handleSave}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition-all text-sm font-medium"
-                        >
-                            <Check className="w-4 h-4" /> Save & Regenerate
-                        </button>
-                    ) : (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 transition-all text-sm font-medium"
-                        >
-                            <Edit3 className="w-4 h-4" /> Edit Content
-                        </button>
-                    )}
-
-                    <div className="w-px h-6 bg-neutral-800 mx-2" />
-
-                    <button
-                        onClick={() => { if (editedResult.downloadUrl) window.open(editedResult.downloadUrl, '_blank'); }}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/50 transition-all text-sm font-medium hover:scale-[1.02]"
-                    >
-                        <Download className="w-4 h-4" /> Download PPTX
-                    </button>
-                    <button
-                        onClick={() => { setCurrentSlide(0); setIsPresenting(true); }}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all text-sm font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02]"
-                        style={{ background: `linear-gradient(135deg, #${theme.accent1}, #${theme.accent2})`, boxShadow: `0 4px 20px ${hexRgba(theme.accent1, 0.3)}` }}
-                    >
-                        <Play className="w-4 h-4 fill-current" /> Present
-                    </button>
-                </div>
-            </header>
+            {/* Ribbon Toolbar */}
+            <div className="sticky top-0 z-20">
+                <RibbonToolbar
+                    title={editedResult.title}
+                    onBack={onBack}
+                    onPresent={() => { setCurrentSlide(0); setIsPresenting(true); }}
+                    onEdit={() => setIsEditing(true)}
+                    onSave={handleSave}
+                    onDownload={() => { if (editedResult.downloadUrl) window.open(editedResult.downloadUrl, '_blank'); }}
+                    isEditing={isEditing}
+                />
+            </div>
 
             <main className="p-8 max-w-7xl mx-auto">
                 {/* Research Hub Section */}

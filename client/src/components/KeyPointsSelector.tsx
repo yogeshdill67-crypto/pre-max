@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, Layout, Settings, FileText, Activity, GitCommit, Layers, PieChart, Info, BarChart2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Layout, FileText, Activity, GitCommit, Layers, BarChart2 } from 'lucide-react';
 
 interface KeyPointsSelectorProps {
     plan: any; // The plan from /api/analyze
@@ -107,10 +107,10 @@ export const KeyPointsSelector: React.FC<KeyPointsSelectorProps> = ({ plan, onCo
                                     <div className="relative group">
                                         <button className="w-full flex items-center gap-3 px-4 py-3 bg-neutral-800 rounded-xl border border-neutral-700 hover:border-blue-500 transition-all text-left">
                                             <div className={`p-2 rounded-lg ${currentType.id === 'exploded_view' ? 'bg-orange-500/20 text-orange-400' :
-                                                    currentType.id === 'cutaway' ? 'bg-red-500/20 text-red-400' :
-                                                        currentType.id === 'dashboard' ? 'bg-green-500/20 text-green-400' :
-                                                            currentType.id === 'flowchart' ? 'bg-blue-500/20 text-blue-400' :
-                                                                'bg-neutral-700/50 text-neutral-300'
+                                                currentType.id === 'cutaway' ? 'bg-red-500/20 text-red-400' :
+                                                    currentType.id === 'dashboard' ? 'bg-green-500/20 text-green-400' :
+                                                        currentType.id === 'flowchart' ? 'bg-blue-500/20 text-blue-400' :
+                                                            'bg-neutral-700/50 text-neutral-300'
                                                 }`}>
                                                 <Icon className="w-5 h-5" />
                                             </div>
