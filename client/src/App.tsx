@@ -3,7 +3,6 @@ import { LandingPage } from './components/LandingPage';
 import { ContentSelector } from './components/ContentSelector';
 import { SlidePreview } from './components/SlidePreview';
 import { NotebookPage } from './components/NotebookPage';
-import { ImageSelector } from './components/ImageSelector';
 import { KeyPointsSelector } from './components/KeyPointsSelector';
 import { AppMode, AppStep, TemplateChoice, PresentationResult } from './types';
 import { InfographicStudio } from './components/InfographicStudio';
@@ -109,7 +108,7 @@ function App() {
                     slides: data.data.slides,
                     downloadUrl: '',
                 });
-                setStep('imageSelect');
+                setStep('preview');
             } else {
                 setError(data.error || 'Generation failed');
                 setStep('workspace'); // Or back to keyPointsSelect?
@@ -143,12 +142,12 @@ function App() {
                 setStep('preview');
             } else {
                 setError(data.error || 'PPTX generation failed');
-                setStep('imageSelect');
+                // Stay on preview to retry
             }
         } catch (err) {
             console.error('PPTX generation failed:', err);
             setError('Failed to generate PPTX. Try again.');
-            setStep('imageSelect');
+            // Stay on preview
         }
     };
 
@@ -212,16 +211,7 @@ function App() {
         );
     }
 
-    // Image Selection
-    if (step === 'imageSelect' && result) {
-        return (
-            <ImageSelector
-                result={result}
-                onConfirm={handleFinalizeWithImages}
-                onBack={() => setStep('workspace')}
-            />
-        );
-    }
+
 
     // Preview
     if (step === 'preview' && result) {

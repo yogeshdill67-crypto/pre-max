@@ -327,32 +327,159 @@ app.post('/api/search-images', async (req, res) => {
         const { query } = req.body;
         if (!query) return res.status(400).json({ error: 'Query is required' });
 
-        console.log(`Web image search (Google): "${query}"`);
+        console.log(`Web image search: "${query}"`);
 
-        const results = await new Promise<any[]>((resolve, reject) => {
-            gis(query, (error: any, results: any[]) => {
-                if (error) reject(error);
-                else resolve(results);
+        let images: any[] = [];
+
+        // Strategy 1: Try Google Image Search (g-i-s)
+        try {
+            console.log('Attempting Strategy 1: Google Image Search (g-i-s)...');
+            const googleResults = await new Promise<any[]>((resolve, reject) => {
+                const timeout = setTimeout(() => reject(new Error('Timeout')), 5000);
+                gis(query, (error: any, results: any[]) => {
+                    clearTimeout(timeout);
+                    if (error) reject(error);
+                    else resolve(results);
+                });
             });
-        });
 
-        // Take top 100 results
-        const images = results.slice(0, 100).map((r: any) => {
-            let title = query;
-            let source = 'Google';
+            if (googleResults && googleResults.length > 0) {
+                console.log(`Startegy 1 Success: Found ${googleResults.length} images.`);
+                images = googleResults.slice(0, 100).map((r: any) => ({
+                    title: query,
+                    image: r.url,
+                    thumbnail: r.url,
+                    url: r.url,
+                    source: 'Google'
+                }));
+            }
+        } catch (err) {
+            console.log('Strategy 1 Failed:', err);
+        }
+
+        // Strategy 2: If Google fails/empty, try DuckDuckGo
+        if (images.length === 0) {
             try {
-                // Try to extract domain from URL if possible
-                source = new URL(r.url).hostname.replace('www.', '');
-            } catch (e) { }
+                console.log('Attempting Strategy 2: DuckDuckGo...');
+                // @ts-ignore
+                const { searchImages } = require('duck-duck-scrape');
+                const ddgResults = await searchImages(query);
 
-            return {
-                title: title,
-                image: r.url,
-                thumbnail: r.url, // g-i-s provides 'url', 'width', 'height'. No separate thumb. Use full image.
-                url: r.url,
-                source: source
-            };
-        });
+                if (ddgResults && ddgResults.results && ddgResults.results.length > 0) {
+                    console.log(`Strategy 2 Success: Found ${ddgResults.results.length} images.`);
+                    images = ddgResults.results.map((r: any) => ({
+                        title: r.title || query,
+                        image: r.image,
+                        thumbnail: r.thumbnail,
+                        url: r.url,
+                        source: 'DuckDuckGo'
+                    }));
+                }
+            } catch (err) {
+                console.log('Strategy 2 Failed:', err);
+            }
+        }
+
+        // Strategy 3: If all else fails, use Wikimedia (Classic Fallback)
+        if (images.length === 0) {
+            try {
+                console.log('Attempting Strategy 3: Wikimedia Fallback (Strict)...');
+                const k = encodeURIComponent(query + ' filetype:jpg -historical -drawing -chart');
+                const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${k}&gsrnamespace=6&prop=imageinfo&iiprop=url&iiurlwidth=1280&format=json&origin=*&gsrlimit=20`;
+
+                const wikiRes = await fetch(url);
+                const wikiData = await wikiRes.json();
+
+                if (wikiData.query && wikiData.query.pages) {
+                    const wikiImages = Object.values(wikiData.query.pages)
+                        .map((p: any) => ({
+                            title: p.title || query,
+                            image: p.imageinfo?.[0]?.url,
+                            thumbnail: p.imageinfo?.[0]?.thumburl,
+                            url: p.imageinfo?.[0]?.url,
+                            source: 'Wikimedia'
+                        }))
+                        .filter((img: any) => img.image);
+
+                    if (wikiImages.length > 0) {
+                        console.log(`Strategy 3 Success: Found ${wikiImages.length} images.`);
+                        images = wikiImages;
+                    }
+                }
+            } catch (err) {
+                console.log('Strategy 3 Failed:', err);
+            }
+        }
+
+        // Strategy 4: Relaxed Fallback (Fuzzy Search for typos)
+        if (images.length === 0) {
+            try {
+                console.log('Attempting Strategy 4: Wikimedia Fallback (Fuzzy)...');
+                // Add ~ to each word for fuzzy matching
+                const fuzzyQuery = query.split(' ').map((w: string) => w + '~').join(' ');
+                const k = encodeURIComponent(fuzzyQuery);
+                const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${k}&gsrnamespace=6&prop=imageinfo&iiprop=url&iiurlwidth=1280&format=json&origin=*&gsrlimit=20`;
+
+                const wikiRes = await fetch(url);
+                const wikiData = await wikiRes.json();
+
+                if (wikiData.query && wikiData.query.pages) {
+                    const wikiImages = Object.values(wikiData.query.pages)
+                        .map((p: any) => ({
+                            title: p.title || query,
+                            image: p.imageinfo?.[0]?.url,
+                            thumbnail: p.imageinfo?.[0]?.thumburl,
+                            url: p.imageinfo?.[0]?.url,
+                            source: 'Wikimedia (Fuzzy)'
+                        }))
+                        .filter((img: any) => img.image);
+
+                    if (wikiImages.length > 0) {
+                        console.log(`Strategy 4 Success: Found ${wikiImages.length} images.`);
+                        images = wikiImages;
+                    }
+                }
+            } catch (err) {
+                console.log('Strategy 4 Failed:', err);
+            }
+        }
+
+        if (images.length === 0) {
+            // Final Hail Mary: Search for individual words if the full phrase fails
+            const words = query.split(' ');
+            if (words.length > 1) {
+                try {
+                    console.log('Attempting Strategy 5: Single Word Fallback...');
+                    const mainWord = words.sort((a: string, b: string) => b.length - a.length)[0]; // Longest word
+                    const k = encodeURIComponent(mainWord + '~'); // Fuzzy match the word
+                    const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${k}&gsrnamespace=6&prop=imageinfo&iiprop=url&iiurlwidth=1280&format=json&origin=*&gsrlimit=20`;
+
+                    const wikiRes = await fetch(url);
+                    const wikiData = await wikiRes.json();
+
+                    if (wikiData.query && wikiData.query.pages) {
+                        const wikiImages = Object.values(wikiData.query.pages)
+                            .map((p: any) => ({
+                                title: p.title || query,
+                                image: p.imageinfo?.[0]?.url,
+                                thumbnail: p.imageinfo?.[0]?.thumburl,
+                                url: p.imageinfo?.[0]?.url,
+                                source: 'Wikimedia (Word)'
+                            }))
+                            .filter((img: any) => img.image);
+
+                        if (wikiImages.length > 0) {
+                            console.log(`Strategy 5 Success: Found ${wikiImages.length} images.`);
+                            images = wikiImages;
+                        }
+                    }
+                } catch (e) { }
+            }
+        }
+
+        if (images.length === 0) {
+            return res.status(404).json({ error: 'No images found from any provider' });
+        }
 
         res.json({ success: true, images });
     } catch (error: any) {
